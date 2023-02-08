@@ -1,0 +1,12 @@
+{
+  "extends": [
+    "next/core-web-vitals",
+    "prettier" // Add "prettier" last. This will turn off eslint rules conflicting with prettier. This is not what will format our code.
+  ],
+  "rules": {
+    // I suggest you add those two rules:
+    "react/jsx-uses-react": "off",
+    "react/react-in-jsx-scope": "off",
+    "css/no-unknown-property": "off"
+  }
+}
