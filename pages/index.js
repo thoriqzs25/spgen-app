@@ -1,8 +1,7 @@
 import { Button, Flex, Text } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import SpotifyWebApi from 'spotify-web-api-js';
-import { auth, urlLogin } from '../src/requests';
-import { getAudioFeatures_Track, getAuth, getUser } from '../src/scripts';
+import { urlLogin } from '../src/auth';
 
 const Home = () => {
   const [token, setToken] = useState('');
@@ -44,7 +43,7 @@ const Home = () => {
   const checkTrack = () => {
     spotify.getMyCurrentPlayingTrack().then((song) => {
       setCurrent(song);
-      console.log('Current Song:', song.item.name);
+      console.log('Current Song:', song.item);
     });
     spotify.getcurrent;
   };
@@ -74,7 +73,12 @@ const Home = () => {
         alignItems={'center'}>
         <Profile />
         {user && <Flex>{user.display_name}</Flex>}
-        {curr && <Flex>{curr.item.name}</Flex>}
+        {curr && (
+          <Flex flexDir={'column'} alignItems={'center'}>
+            <Text>{curr.item.name}</Text>
+            <img src={curr.item.album.images[1].url} width={80} height={80} />
+          </Flex>
+        )}
       </Flex>
     </Flex>
   );
