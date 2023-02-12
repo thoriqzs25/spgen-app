@@ -53,7 +53,8 @@ const Home = () => {
   };
 
   const getPlaylist = (id) => {
-    spotify.getUserPlaylists(id, { limit: 4 }).then((pl) => {
+    spotify.getUserPlaylists(id).then((pl) => {
+      // spotify.getUserPlaylists(id, { limit: 4 }).then((pl) => {
       setUserPl(pl);
       console.log('User playlists...', pl.items);
     });
@@ -69,11 +70,13 @@ const Home = () => {
   const Profile = () => {
     return (
       <Box marginBottom={'12px'}>
-        <Flex flexDir={'column'} alignItems={'center'}>
-          <Button border={'1px solid black'} onClick={checkTrack} marginBottom={'12px'}>
-            Check Current Track
-          </Button>
-        </Flex>
+        {user && (
+          <Flex flexDir={'column'} alignItems={'center'}>
+            <Button border={'1px solid black'} onClick={checkTrack} marginBottom={'12px'}>
+              Check Current Track
+            </Button>
+          </Flex>
+        )}
         {user ? (
           <Flex>
             <Box bgColor={'redYoung'} width={'80px'} height={'80px'} marginRight={'8px'}>
@@ -131,7 +134,7 @@ const Home = () => {
         alignItems={'center'}>
         <Profile />
         {curr && (
-          <Flex flexDir={'column'} alignItems={'center'} marginBottom={'12px'}>
+          <Flex flexDir={'column'} alignItems={'center'} marginBottom={'12px'} bgColor={'background'} w={'full'}>
             <Text>{curr.item.name}</Text>
             <img src={curr.item.album.images[1].url} width={80} height={80} />
           </Flex>
@@ -141,9 +144,11 @@ const Home = () => {
             <Text fontSize={'20px'} fontWeight={'bold'}>
               List Playlist
             </Text>
-            {userPl.items.map((pl, idx) => {
-              return <PlaylistCard item={pl} key={idx.toString()} />;
-            })}
+            <Box maxH={'400px'} bgColor={'yellowYoung'} overflowY={'scroll'} paddingTop={'8px'}>
+              {userPl.items.map((pl, idx) => {
+                return <PlaylistCard item={pl} key={idx.toString()} />;
+              })}
+            </Box>
           </Box>
         )}
       </Flex>
