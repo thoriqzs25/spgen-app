@@ -40,7 +40,8 @@ var querystring = require('querystring');
 // };
 
 const scope = 'user-read-private user-read-email user-read-currently-playing user-read-playback-state';
-const redirect_uri = 'http://localhost:8888/';
+const redirect_uri = 'http://spgen-app.vercel.app/';
+// const redirect_uri = 'http://localhost:8888/';
 
 export const urlLogin =
   'https://accounts.spotify.com/authorize?' +

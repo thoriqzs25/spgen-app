@@ -6,6 +6,9 @@ import { getAudioFeatures_Track, getAuth, getUser } from '../src/scripts';
 
 const Home = () => {
   const [token, setToken] = useState('');
+  const [user, setUser] = useState();
+  const [curr, setCurrent] = useState('');
+
   const spotify = new SpotifyWebApi();
 
   const findToken = () => {
@@ -32,6 +35,7 @@ const Home = () => {
       spotify.setAccessToken(spotifyToken);
 
       spotify.getMe().then((user) => {
+        setUser(user);
         console.log('My account...', user);
       });
     }
@@ -39,6 +43,7 @@ const Home = () => {
 
   const checkTrack = () => {
     spotify.getMyCurrentPlayingTrack().then((song) => {
+      setCurrent(song);
       console.log('Current Song:', song.item.name);
     });
     spotify.getcurrent;
@@ -47,9 +52,9 @@ const Home = () => {
   const Profile = () => {
     return (
       <Flex justifyContent={'space-around'}>
-        <a href={urlLogin}>
-          <Button border={'1px solid black'}>Login</Button>
-        </a>
+        <Button border={'1px solid black'}>
+          <a href={urlLogin}>Login</a>
+        </Button>
         <Button border={'1px solid black'} onClick={checkTrack}>
           Check Current Track
         </Button>
@@ -59,8 +64,17 @@ const Home = () => {
 
   return (
     <Flex bg={'greenYoung'} justifyContent={'center'} w={'full'}>
-      <Flex bgColor={'white'} w={'full'} maxW={'420px'} minH={'100vh'} p={'12px'} justifyContent={'center'}>
+      <Flex
+        flexDir={'column'}
+        bgColor={'white'}
+        w={'full'}
+        maxW={'420px'}
+        minH={'100vh'}
+        p={'12px'}
+        alignItems={'center'}>
         <Profile />
+        {user && <Flex>{user.display_name}</Flex>}
+        {curr && <Flex>{curr.item.name}</Flex>}
       </Flex>
     </Flex>
   );
