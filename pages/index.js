@@ -289,7 +289,7 @@ const Home = () => {
         alignItems={'center'}
         pos={'relative'}>
         <Text pos={'absolute'} color={'white'} left={'20px'} p={'4px'} borderRadius={'8px'} bgColor={'blue.300'}>
-          v1.0.0
+          v1.0.1
         </Text>
         <Profile />
         {curr && (
