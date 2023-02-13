@@ -12,6 +12,7 @@ const Home = () => {
   });
 
   const [inputPl, setInputPl] = useState('');
+  const [searchRes, setSearchRes] = useState([]);
 
   const spotify = new SpotifyWebApi();
 
@@ -111,6 +112,31 @@ const Home = () => {
       });
   };
 
+  const searchTrack = (key) => {
+    if (key.length > 2) {
+      spotify.searchTracks(key).then((res) => {
+        let totalRes = [];
+        res.tracks.items.map((track, _) => {
+          const name = track.name;
+          const id = track.id;
+          const img = track.album.images.length > 0 ? track.album.images[1].url : '';
+          const obj = { value: id, label: name, img: img };
+          totalRes.push(obj);
+        });
+        setSearchRes(totalRes);
+      });
+    } else setSearchRes([]);
+  };
+
+  const showSearchRes = (id) => {
+    spotify.getTracks([id]).then((res) => {
+      // console.log('song, line 254', res.tracks[0]);
+
+      setCurrent({ item: res.tracks[0] });
+      setSearchRes([]);
+    });
+  };
+
   const Profile = () => {
     return (
       <Box marginBottom={'12px'}>
@@ -137,6 +163,16 @@ const Home = () => {
             <a href={urlLogin}>Login</a>
           </Button>
         )}
+      </Box>
+    );
+  };
+
+  const Playlist = () => {
+    return (
+      <Box w={'320px'} maxH={'400px'} bgColor={'yellowYoung'} overflowY={'scroll'} paddingTop={'8px'}>
+        {userPl.items.map((pl, idx) => {
+          return <PlaylistCard item={pl} key={idx.toString()} />;
+        })}
       </Box>
     );
   };
@@ -216,6 +252,45 @@ const Home = () => {
             <img src={curr.item.album.images[1].url} width={80} height={80} />
           </Flex>
         )}
+        {user && (
+          <>
+            <Input
+              marginBottom={'12px'}
+              width={'80%'}
+              type={'search'}
+              onBlur={(e) => searchTrack(e.target.value)}
+              onChange={(e) => searchTrack(e.target.value)}
+            />
+            {searchRes.length > 0 && (
+              <Flex
+                flexDir={'column'}
+                maxH={'200px'}
+                bgColor={'gray300'}
+                overflowY={'scroll'}
+                paddingLeft={'12px'}
+                w={'400px'}>
+                {searchRes.map((res, idx) => {
+                  return (
+                    <Button
+                      marginBottom={'12px'}
+                      w={'full'}
+                      key={idx.toString()}
+                      onClick={() => showSearchRes(res.value)}>
+                      <Flex w={'full'}>
+                        <img src={res.img} width={40} height={40} />
+                        <Flex w={'full'} bgColor={'greenYoung'}>
+                          <Text w={'full'} bgColor={'yellow'} textAlign={'left'} marginLeft={'12px'}>
+                            {res.label}
+                          </Text>
+                        </Flex>
+                      </Flex>
+                    </Button>
+                  );
+                })}
+              </Flex>
+            )}
+          </>
+        )}
         {userPl.total > 0 && (
           <Box>
             <Flex marginBottom={'8px'}>
@@ -224,21 +299,17 @@ const Home = () => {
               </Text>
               <Input
                 type={'text'}
+                value={inputPl}
                 placeholder={'Nama playlist...'}
-                onChange={(e) => {
-                  setInputPl(e.target.value);
-                }}
+                _placeholder={{ color: 'gray500', fontSize: '12px' }}
+                onChange={(e) => setInputPl(e.target.value)}
                 w={'140px'}
               />
               <Button border={'1px solid black'} borderRadius={'8px'} onClick={() => newPlaylist()}>
                 +
               </Button>
             </Flex>
-            <Box w={'320px'} maxH={'400px'} bgColor={'yellowYoung'} overflowY={'scroll'} paddingTop={'8px'}>
-              {userPl.items.map((pl, idx) => {
-                return <PlaylistCard item={pl} key={idx.toString()} />;
-              })}
-            </Box>
+            <Playlist />
           </Box>
         )}
       </Flex>
