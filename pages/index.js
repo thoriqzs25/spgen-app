@@ -73,7 +73,6 @@ const Home = () => {
         toast({ title: 'Gaada lagu yang diputar', status: 'warning' });
       } else setCurrent(song);
       setTimeout(() => {
-        console.log('line 76');
         toast.closeAll();
       }, 700);
     });
