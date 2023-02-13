@@ -34,13 +34,8 @@ const Home = () => {
 
   const toast = useToast({
     position: 'top',
-    // title: title,
     duration: 2400,
     isClosable: true,
-    containerStyle: {
-      width: '320px',
-      maxWidth: '100%',
-    },
   });
 
   const findToken = () => {
@@ -56,8 +51,6 @@ const Home = () => {
   };
 
   useEffect(() => {
-    // console.log('Spotify token...', findToken());
-
     const spotifyToken = findToken().access_token;
     window.location.hash = '';
 
@@ -69,33 +62,33 @@ const Home = () => {
       spotify.getMe().then((user) => {
         setUser(user);
         getPlaylist(user.id);
-        // console.log('My account...', user);
       });
     }
   }, []);
 
   const checkTrack = () => {
+    toast({ title: 'Finding current track...', status: 'loading' });
     spotify.getMyCurrentPlayingTrack().then((song) => {
       if (!song) {
-        toast({ title: 'Gaada lagu yang diputar' });
+        toast({ title: 'Gaada lagu yang diputar', status: 'warning' });
       } else setCurrent(song);
-      // console.log('Current Song:', song.item);
+      setTimeout(() => {
+        console.log('line 76');
+        toast.closeAll();
+      }, 700);
     });
-
-    spotify.getcurrent;
   };
 
   const getPlaylist = (id) => {
     spotify.getUserPlaylists(id).then((pl) => {
       // spotify.getUserPlaylists(id, { limit: 4 }).then((pl) => {
       setUserPl(pl);
-      console.log('User playlists...', pl.items);
     });
   };
 
   const deletePlaylist = (id) => {
     spotify.unfollowPlaylist(id).then(() => {
-      toast({ title: 'Success deleting playlist' });
+      toast({ title: 'Success deleting playlist', status: 'info' });
       getPlaylist(user.id);
     });
   };
@@ -114,9 +107,9 @@ const Home = () => {
     if (!checkIfExist(allTracks, tUri)) {
       spotify.addTracksToPlaylist(plId, tUri).then(() => {
         getPlaylist(user.id);
-        toast({ title: 'Success adding track to playlist' });
+        toast({ title: 'Success adding track to playlist', status: 'info' });
       });
-    } else toast({ title: 'Track already in the playlist' });
+    } else toast({ title: 'Track already in the playlist', status: 'warning' });
   };
 
   const checkIfExist = (data, tUri) => {
@@ -130,15 +123,30 @@ const Home = () => {
     return flag;
   };
 
+  const checkIfPlExist = (plName) => {
+    let flag = false;
+
+    userPl.items.map((pl, _) => {
+      if (pl.name === plName) flag = true;
+    });
+
+    return flag;
+  };
+
   const newPlaylist = () => {
+    if (checkIfPlExist(inputPl)) {
+      toast({ title: 'Playlist with requested name exists', status: 'warning' });
+      return;
+    }
+
     spotify
       .createPlaylist(user.id, { name: inputPl })
       .then(() => {
-        toast({ title: 'Success creating playlist' });
+        toast({ title: 'Success creating playlist', status: 'info' });
         getPlaylist(user.id);
       })
       .catch((e) => {
-        toast({ title: 'ERROR WHILE CREATING PLAYLIST' });
+        toast({ title: 'ERROR WHILE CREATING PLAYLIST', status: 'warning' });
       });
   };
 
@@ -160,8 +168,6 @@ const Home = () => {
 
   const showSearchRes = (id) => {
     spotify.getTracks([id]).then((res) => {
-      // console.log('song, line 254', res.tracks[0]);
-
       setCurrent({ item: res.tracks[0] });
       setSearchRes([]);
     });
