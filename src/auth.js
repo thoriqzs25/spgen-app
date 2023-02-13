@@ -17,5 +17,14 @@ export const urlLogin =
     client_id: CLIENT_ID,
     scope: scope,
     redirect_uri: redirect_uri,
+  });
+
+export const newLogin =
+  'https://accounts.spotify.com/authorize?' +
+  querystring.stringify({
+    response_type: 'token',
+    client_id: CLIENT_ID,
+    scope: scope,
+    redirect_uri: redirect_uri,
     show_dialog: true,
   });
