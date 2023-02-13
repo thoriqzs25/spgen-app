@@ -70,11 +70,14 @@ const Home = () => {
     toast({ title: 'Finding current track...', status: 'loading' });
     spotify.getMyCurrentPlayingTrack().then((song) => {
       if (!song) {
-        toast({ title: 'Gaada lagu yang diputar', status: 'warning' });
-      } else setCurrent(song);
-      setTimeout(() => {
         toast.closeAll();
-      }, 700);
+        toast({ title: 'Gaada lagu yang diputar', status: 'warning' });
+      } else {
+        setTimeout(() => {
+          toast.closeAll();
+        }, 800);
+        setCurrent(song);
+      }
     });
   };
 
@@ -93,6 +96,7 @@ const Home = () => {
   };
 
   const addToPlaylist = async (plId, tUri) => {
+    toast({ title: 'Adding track to playlist...', status: 'loading' });
     let tracks = await spotify.getPlaylistTracks(plId).then((tracks) => {
       return tracks;
     });
@@ -105,8 +109,8 @@ const Home = () => {
 
     if (!checkIfExist(allTracks, tUri)) {
       spotify.addTracksToPlaylist(plId, tUri).then(() => {
-        getPlaylist(user.id);
         toast({ title: 'Success adding track to playlist', status: 'info' });
+        getPlaylist(user.id);
       });
     } else toast({ title: 'Track already in the playlist', status: 'warning' });
   };
@@ -289,7 +293,7 @@ const Home = () => {
         alignItems={'center'}
         pos={'relative'}>
         <Text pos={'absolute'} color={'white'} left={'20px'} p={'4px'} borderRadius={'8px'} bgColor={'blue.300'}>
-          v1.0.1
+          v1.0.2
         </Text>
         <Profile />
         {curr && (
