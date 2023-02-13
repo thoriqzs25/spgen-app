@@ -69,11 +69,34 @@ const Home = () => {
     });
   };
 
-  const addToPlaylist = (plId, tUri) => {
-    spotify.addTracksToPlaylist(plId, tUri).then(() => {
-      console.log('Success adding track to playlist');
-      getPlaylist(user.id);
+  const addToPlaylist = async (plId, tUri) => {
+    let tracks = await spotify.getPlaylistTracks(plId).then((tracks) => {
+      return tracks;
     });
+    let allTracks = tracks.items;
+    while (tracks.next !== null) {
+      const next = await spotify.getPlaylistTracks(plId, { offset: allTracks.length, limit: 100 });
+      allTracks = [...allTracks, ...next.items];
+      tracks = next;
+    }
+
+    if (!checkIfExist(allTracks, tUri)) {
+      spotify.addTracksToPlaylist(plId, tUri).then(() => {
+        getPlaylist(user.id);
+        console.log('Success adding track to playlist');
+      });
+    } else console.log('Track already in the playlist');
+  };
+
+  const checkIfExist = (data, tUri) => {
+    const tId = tUri[0].split(':')[2];
+    let flag = false;
+
+    data.map((item, _) => {
+      if (item.track.id === tId) flag = true;
+    });
+
+    return flag;
   };
 
   const newPlaylist = () => {
