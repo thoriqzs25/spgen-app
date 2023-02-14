@@ -13,9 +13,12 @@ import {
   ModalFooter,
   useToast,
 } from '@chakra-ui/react';
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { useDispatch, useStore } from 'react-redux';
 import SpotifyWebApi from 'spotify-web-api-js';
 import { urlLogin, newLogin } from '../src/auth';
+import { userLogin } from '../src/redux/action';
 
 const Home = () => {
   const [token, setToken] = useState('');
@@ -31,6 +34,10 @@ const Home = () => {
   const [plModal, setPlModal] = useState();
 
   const spotify = new SpotifyWebApi();
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  const states = useStore().getState();
 
   const toast = useToast({
     position: 'top',
@@ -54,10 +61,12 @@ const Home = () => {
     const spotifyToken = findToken().access_token;
     window.location.hash = '';
 
-    if (spotifyToken) {
-      setToken(spotifyToken);
+    if (spotifyToken || states.auth.token) {
+      const token = spotifyToken ? spotifyToken : states.auth.token;
+      if (!states.auth.token) dispatch(userLogin(spotifyToken));
+      setToken(token);
 
-      spotify.setAccessToken(spotifyToken);
+      spotify.setAccessToken(token);
 
       spotify.getMe().then((user) => {
         setUser(user);
@@ -200,6 +209,8 @@ const Home = () => {
               <a href={newLogin}>Switch</a>
             </Button>
           </Flex>
+        ) : states.auth.token ? (
+          <Text>Loading...</Text>
         ) : (
           <Button border={'1px solid black'}>
             <a href={urlLogin}>Login</a>
@@ -230,12 +241,34 @@ const Home = () => {
     return (
       <Flex marginBottom={'8px'} justifyContent={'space-between'} alignItems={'center'}>
         <Flex>
-          <Box bgColor={'redYoung'} width={'80px'} height={'80px'} marginRight={'8px'}>
-            {item.images.length > 0 ? (
-              <img src={item.images[0].url} style={{ objectFit: 'cover', width: 80, height: 80 }} />
-            ) : (
-              <Text>No Pict</Text>
-            )}
+          <Box width={'80px'} height={'80px'} marginRight={'8px'}>
+            <Flex
+              cursor={'pointer'}
+              pos={'relative'}
+              w={'full'}
+              h={'full'}
+              onClick={() => router.push({ pathname: '/playlist', query: { userId: user.id, plId: item.id } })}>
+              <Flex
+                pos={'absolute'}
+                opacity={0}
+                _hover={{ opacity: 0.85 }}
+                width={'80px'}
+                height={'80px'}
+                zIndex={10}
+                bgColor={'gray700'}
+                alignItems={'center'}>
+                <Text color={'white'} textAlign={'center'} fontWeight={'bold'}>
+                  Show Details
+                </Text>
+              </Flex>
+              {item.images.length > 0 ? (
+                <img src={item.images[0].url} style={{ objectFit: 'cover', width: 80, height: 80 }} />
+              ) : (
+                <Text bgColor={'redYoung'} w={'full'} h={'full'} textAlign={'center'}>
+                  No Pict
+                </Text>
+              )}
+            </Flex>
           </Box>
           <Flex flexDir={'column'} justifyContent={'space-between'}>
             <Text noOfLines={1}>{item.name}</Text>
