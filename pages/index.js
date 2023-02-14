@@ -71,12 +71,17 @@ const Home = () => {
       spotify.getMe().then((user) => {
         setUser(user);
         getPlaylist(user.id);
-      });
+      })
+      .catch((e)=>{
+        console.log(e, 'line76')
+        dispatch(userLogin(''))
+        setUToken('')
+      })
     }
   }, []);
 
   useEffect(() => {
-    console.log(userPl, curr, 'line 79');
+    // console.log(userPl, curr, 'line 79');
   }, [curr]);
 
   const checkTrack = () => {
@@ -90,6 +95,7 @@ const Home = () => {
           toast.closeAll();
         }, 800);
         setCurrent(song);
+        console.log('Popularity: ', song.item.popularity, 'line 98');
       }
     });
   };
@@ -170,19 +176,35 @@ const Home = () => {
 
   const searchTrack = (key) => {
     if (key.length > 2) {
-      spotify.searchTracks(key).then((res) => {
+      spotify.searchTracks(key, {limit: 4}).then((res) => {
         let totalRes = [];
         res.tracks.items.map((track, _) => {
           const name = track.name;
+          let artistName = ''
+          track.artists.map((art, idx) => {
+            if (idx === 0) {
+              artistName = `${art.name}`
+            } else {
+              if (idx<=2) {
+                artistName = `${artistName}, ${art.name}`
+              }
+            }
+          })
+          if (track.artists.length>3) {
+            artistName = `${artistName}, +${track.artists.length-3}`
+          }
+
+          const artist = artistName;
           const id = track.id;
           const img = track.album.images.length > 0 ? track.album.images[1].url : '';
-          const obj = { value: id, label: name, img: img };
+          const obj = { value: id, label: name, img: img, artist: artist };
           totalRes.push(obj);
         });
         setSearchRes(totalRes);
       });
     } else setSearchRes([]);
   };
+
 
   const showSearchRes = (id) => {
     spotify.getTracks([id]).then((res) => {
@@ -234,6 +256,16 @@ const Home = () => {
   const Playlist = () => {
     return (
       <Box
+        sx={{
+          '&::-webkit-scrollbar': {
+            width: '16px',
+            borderRadius: '8px',
+            backgroundColor: `rgba(0, 0, 0, 0.05)`,
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: `rgba(0, 0, 0, 0.05)`,
+          },
+        }}
         paddingLeft={'10px'}
         paddingRight={'10px'}
         w={'340px'}
@@ -329,7 +361,7 @@ const Home = () => {
     <Flex bg={'greenYoung'} justifyContent={'center'} w={'full'}>
       <Flex
         flexDir={'column'}
-        bgColor={'white'}
+        bgColor={'orange'}
         w={'full'}
         maxW={'420px'}
         minH={'100vh'}
@@ -343,7 +375,7 @@ const Home = () => {
           p={'4px'}
           border={'1px'}
           borderRadius={'8px'}
-          bgColor={'white'}>
+          bgColor={'orange'}>
           v1.1.0
         </Text>
         <Profile />
@@ -357,7 +389,7 @@ const Home = () => {
             paddingBottom={'8px'}
             borderRadius={'10'}
             shadow={'base'}>
-            <Text>{curr.item.name}</Text>
+            <Text>{curr.item.name}: {curr.item.popularity}/100</Text>
             <img src={curr.item.album.images[1].url} width={80} height={80} />
           </Flex>
         )}
@@ -372,13 +404,12 @@ const Home = () => {
               onBlur={(e) => searchTrack(e.target.value)}
               onChange={(e) => searchTrack(e.target.value)}
             />
-            <Text>limit 20 per search</Text>
+            <Text>limit 4 per search</Text>
             {searchRes.length > 0 && (
               <Flex
                 flexDir={'column'}
                 maxH={'200px'}
                 bgColor={'gray300'}
-                overflowY={'scroll'}
                 paddingLeft={'12px'}
                 w={'400px'}>
                 {searchRes.map((res, idx) => {
@@ -390,10 +421,13 @@ const Home = () => {
                       onClick={() => showSearchRes(res.value)}>
                       <Flex w={'full'}>
                         <img src={res.img} width={40} height={40} />
-                        <Flex w={'full'} bgColor={'greenYoung'}>
-                          <Text w={'full'} bgColor={'yellow'} textAlign={'left'} marginLeft={'12px'}>
+                        <Flex flexDir={'column'} w={'full'} bgColor={'greenYoung'} paddingTop={'2px'} paddingBottom={'2px'} justifyContent={'space-between'}>
+                          <Text w={'full'} textAlign={'left'} marginLeft={'12px'}>
                             {res.label}
                           </Text>
+                          <Flex>
+                            <Text fontSize={'12px'} textAlign={'left'} marginLeft={'12px'}>{res.artist}</Text>
+                          </Flex>
                         </Flex>
                       </Flex>
                     </Button>
