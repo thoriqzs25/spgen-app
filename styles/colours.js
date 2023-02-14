@@ -22,6 +22,7 @@ const colours = {
   gray700: '#2F2E2E',
 
   purple: '#7004bc',
+  orange: '#f88c04',
 
   background: '#D9D9D9',
 };
