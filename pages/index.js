@@ -190,14 +190,14 @@ const Home = () => {
       <Box marginBottom={'12px'}>
         {user && (
           <Flex flexDir={'column'} alignItems={'center'}>
-            <Button border={'1px solid black'} onClick={checkTrack} marginBottom={'12px'}>
+            <Button border={'1px solid black'} onClick={checkTrack} marginBottom={'12px'} bgColor={'yellow'} boxShadow={'xl'}>
               Check Current Track
             </Button>
           </Flex>
         )}
         {user ? (
           <Flex>
-            <Box bgColor={'redYoung'} width={'80px'} height={'80px'} marginRight={'8px'}>
+            <Box bgColor={'white'} width={'80px'} height={'80px'} marginRight={'8px'}>
               <img src={user.images[0].url} style={{ objectFit: 'cover', width: 80, height: 80, borderRadius: 40 }} />
             </Box>
             <Box>
@@ -205,14 +205,14 @@ const Home = () => {
               <Text>{user.id}</Text>
               <Text>{user.email}</Text>
             </Box>
-            <Button border={'1px solid black'} fontSize={'12px'} p={'8px'}>
+            <Button border={'1px solid black'} fontSize={'12px'} p={'8px'} bgColor={'yellow'}>
               <a href={newLogin}>Switch</a>
             </Button>
           </Flex>
         ) : states.auth.token ? (
           <Text>Loading...</Text>
         ) : (
-          <Button border={'1px solid black'}>
+          <Button border={'1px solid black'} bgColor={'yellow'}>
             <a href={urlLogin}>Login</a>
           </Button>
         )}
@@ -227,7 +227,7 @@ const Home = () => {
         paddingRight={'10px'}
         w={'340px'}
         maxH={'400px'}
-        bgColor={'yellowYoung'}
+        bgColor={'yellow'}
         overflowY={'scroll'}
         paddingTop={'8px'}>
         {userPl.items.map((pl, idx) => {
@@ -325,7 +325,7 @@ const Home = () => {
         p={'12px'}
         alignItems={'center'}
         pos={'relative'}>
-        <Text pos={'absolute'} color={'white'} left={'20px'} p={'4px'} borderRadius={'8px'} bgColor={'blue.300'}>
+        <Text pos={'absolute'} color={'redYoung'} left={'20px'} p={'4px'} border = {'1px'}borderRadius={'8px'} bgColor={'white'}>
           v1.0.2
         </Text>
         <Profile />
@@ -336,7 +336,9 @@ const Home = () => {
             marginBottom={'12px'}
             bgColor={'background'}
             w={'full'}
-            paddingBottom={'8px'}>
+            paddingBottom={'8px'}
+            borderRadius={'10'}
+            shadow={'base'}>
             <Text>{curr.item.name}</Text>
             <img src={curr.item.album.images[1].url} width={80} height={80} />
           </Flex>
@@ -402,7 +404,7 @@ const Home = () => {
                 marginLeft={'4px'}
                 border={'1px solid black'}
                 borderRadius={'8px'}
-                bg={'Highlight'}
+                bg={'yellow'}
                 onClick={() => newPlaylist()}>
                 +
               </Button>

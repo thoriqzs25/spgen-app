@@ -1,13 +1,13 @@
 const colours = {
-  greenYoung: '#2C6D7E',
-  green: '#1B4657',
+  greenYoung: '#1DB954',
+  green: '#13d860',
   greenOld: '#113543',
 
   yellowYoung: '#EAD65B',
-  yellow: '#C7A722',
-  yellowOld: '#99811A',
+  yellow: '#CDF564',
+  yellowOld: '#ff8c1c',
 
-  redYoung: '#FF7477',
+  redYoung: '#F037A5',
   red: '#E34F53',
   redOld: '#991A1A',
 
@@ -20,6 +20,8 @@ const colours = {
   gray500: '#777676',
   gray600: '#535252',
   gray700: '#2F2E2E',
+
+  purple: '#7004bc',
 
   background: '#D9D9D9',
 };
