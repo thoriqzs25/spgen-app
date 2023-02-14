@@ -3,7 +3,7 @@ import '../styles/globals.css';
 import '@fontsource/poppins';
 import colours from '../styles/colours';
 import { Provider } from 'react-redux';
-import { store, wrapper } from '../src/redux/store';
+import { store } from '../src/redux/store';
 
 const theme = extendTheme({
   colors: colours,
@@ -23,4 +23,4 @@ const MyApp = ({ Component, pageProps }) => {
   );
 };
 
-export default wrapper.withRedux(MyApp);
+export default MyApp;

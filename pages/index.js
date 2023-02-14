@@ -21,7 +21,7 @@ import { urlLogin, newLogin } from '../src/auth';
 import { userLogin } from '../src/redux/action';
 
 const Home = () => {
-  const [token, setToken] = useState('');
+  const [uToken, setUToken] = useState('');
   const [user, setUser] = useState();
   const [curr, setCurrent] = useState('');
   const [userPl, setUserPl] = useState({
@@ -61,10 +61,10 @@ const Home = () => {
     const spotifyToken = findToken().access_token;
     window.location.hash = '';
 
-    if (spotifyToken || states.auth.token) {
-      const token = spotifyToken ? spotifyToken : states.auth.token;
+    if (spotifyToken || uToken || states.auth.token) {
+      const token = spotifyToken ? spotifyToken : uToken ? uToken : states.auth.token;
       if (!states.auth.token) dispatch(userLogin(spotifyToken));
-      setToken(token);
+      setUToken(token);
 
       spotify.setAccessToken(token);
 
@@ -74,6 +74,10 @@ const Home = () => {
       });
     }
   }, []);
+
+  useEffect(() => {
+    console.log(userPl, curr, 'line 79');
+  }, [curr]);
 
   const checkTrack = () => {
     toast({ title: 'Finding current track...', status: 'loading' });
@@ -106,6 +110,17 @@ const Home = () => {
 
   const addToPlaylist = async (plId, tUri) => {
     toast({ title: 'Adding track to playlist...', status: 'loading' });
+    const isExist = await checkIfExist(plId, tUri);
+
+    if (!isExist) {
+      spotify.addTracksToPlaylist(plId, tUri).then(() => {
+        toast({ title: 'Success adding track to playlist', status: 'info' });
+        getPlaylist(user.id);
+      });
+    } else toast({ title: 'Track already in the playlist', status: 'warning' });
+  };
+
+  const checkIfExist = async (plId, tUri) => {
     let tracks = await spotify.getPlaylistTracks(plId).then((tracks) => {
       return tracks;
     });
@@ -116,19 +131,10 @@ const Home = () => {
       tracks = next;
     }
 
-    if (!checkIfExist(allTracks, tUri)) {
-      spotify.addTracksToPlaylist(plId, tUri).then(() => {
-        toast({ title: 'Success adding track to playlist', status: 'info' });
-        getPlaylist(user.id);
-      });
-    } else toast({ title: 'Track already in the playlist', status: 'warning' });
-  };
-
-  const checkIfExist = (data, tUri) => {
     const tId = tUri[0].split(':')[2];
     let flag = false;
 
-    data.map((item, _) => {
+    allTracks.map((item, _) => {
       if (item.track.id === tId) flag = true;
     });
 
@@ -190,7 +196,12 @@ const Home = () => {
       <Box marginBottom={'12px'}>
         {user && (
           <Flex flexDir={'column'} alignItems={'center'}>
-            <Button border={'1px solid black'} onClick={checkTrack} marginBottom={'12px'} bgColor={'yellow'} boxShadow={'xl'}>
+            <Button
+              border={'1px solid black'}
+              onClick={checkTrack}
+              marginBottom={'12px'}
+              bgColor={'yellow'}
+              boxShadow={'xl'}>
               Check Current Track
             </Button>
           </Flex>
@@ -209,7 +220,7 @@ const Home = () => {
               <a href={newLogin}>Switch</a>
             </Button>
           </Flex>
-        ) : states.auth.token ? (
+        ) : uToken ? (
           <Text>Loading...</Text>
         ) : (
           <Button border={'1px solid black'} bgColor={'yellow'}>
@@ -325,8 +336,15 @@ const Home = () => {
         p={'12px'}
         alignItems={'center'}
         pos={'relative'}>
-        <Text pos={'absolute'} color={'redYoung'} left={'20px'} p={'4px'} border = {'1px'}borderRadius={'8px'} bgColor={'white'}>
-          v1.0.2
+        <Text
+          pos={'absolute'}
+          color={'redYoung'}
+          left={'20px'}
+          p={'4px'}
+          border={'1px'}
+          borderRadius={'8px'}
+          bgColor={'white'}>
+          v1.1.0
         </Text>
         <Profile />
         {curr && (

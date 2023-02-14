@@ -1,4 +1,4 @@
-import { Flex, Text } from '@chakra-ui/react';
+import { Box, Flex, Text } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import SpotifyWebApi from 'spotify-web-api-js';
@@ -30,7 +30,27 @@ const PlaylistPage = () => {
         minH={'100vh'}
         p={'12px'}
         alignItems={'center'}
-        pos={'relative'}></Flex>
+        pos={'relative'}>
+        {item ? (
+          <Flex w={'full'}>
+            <Box>
+              {item.images.length > 0 ? (
+                <img src={item.images[0].url} style={{ objectFit: 'cover', width: 80, height: 80 }} />
+              ) : (
+                <Text bgColor={'redYoung'} w={'full'} h={'full'} textAlign={'center'}>
+                  No Pict
+                </Text>
+              )}
+            </Box>
+            <Box>
+              <Text>{item.name}</Text>
+              <Text>{item.tracks.total}</Text>
+            </Box>
+          </Flex>
+        ) : (
+          <Text>Loading...</Text>
+        )}
+      </Flex>
     </Flex>
   );
 };
