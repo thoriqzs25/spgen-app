@@ -1,4 +1,4 @@
-import { CLIENT_ID } from '../key';
+import { CLIENT_ID } from '../../key';
 
 var querystring = require('querystring');
 
