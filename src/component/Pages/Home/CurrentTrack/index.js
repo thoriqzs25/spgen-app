@@ -18,15 +18,15 @@ const CurrentTrack = ({ track }) => {
 
   return (
     <Flex
-      flexDir={'column'}
-      alignItems={'center'}
-      marginBottom={'12px'}
-      bgColor={'background'}
       w={'full'}
-      paddingBottom={'4px'}
+      shadow={'base'}
+      flexDir={'column'}
       paddingTop={'4px'}
       borderRadius={'10'}
-      shadow={'base'}>
+      alignItems={'center'}
+      marginBottom={'12px'}
+      paddingBottom={'4px'}
+      bgColor={'background'}>
       <Text marginBottom={'4px'}>{track.item.name}</Text>
       <Flex alignItems={'center'} pos={'relative'}>
         <img src={track.item.album.images[1].url} width={80} height={80} />

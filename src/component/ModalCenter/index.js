@@ -21,11 +21,11 @@ const ModalCenter = ({ children, closeModal, isOpen, onClickB1 }) => {
 
         <ModalFooter>
           <Button
-            bgColor={'red'}
-            borderColor={'white'}
-            borderWidth={'2px'}
-            color={'white'}
             mr={3}
+            color={'white'}
+            bgColor={'red'}
+            borderWidth={'2px'}
+            borderColor={'white'}
             onClick={() => {
               onClickB1();
               closeModal();

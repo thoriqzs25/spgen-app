@@ -11,9 +11,14 @@ const PlaylistPage = () => {
   const spotify = new SpotifyWebApi();
 
   const getPlaylistById = () => {
-    spotify.getPlaylist(plId).then((res) => {
-      setItem(res);
-    });
+    spotify
+      .getPlaylist(plId)
+      .then((res) => {
+        setItem(res);
+      })
+      .catch(() => {
+        router.push('/');
+      });
   };
 
   useEffect(() => {

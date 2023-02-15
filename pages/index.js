@@ -14,7 +14,7 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useStore } from 'react-redux';
 import SpotifyWebApi from 'spotify-web-api-js';
 import { urlLogin, newLogin } from '../src/utils/redirects';
@@ -37,6 +37,8 @@ const Home = () => {
   const [isOpen, setIsModal] = useState(false);
   const [plModal, setPlModal] = useState();
 
+  const [trackAvailPl, setTrackAvailPl] = useState([]);
+
   const spotify = new SpotifyWebApi();
   const router = useRouter();
   const dispatch = useDispatch();
@@ -48,6 +50,7 @@ const Home = () => {
     duration: 2400,
     isClosable: true,
   });
+  const toastIdRef = useRef();
 
   const findToken = () => {
     return window.location.hash
@@ -80,24 +83,21 @@ const Home = () => {
         })
         .catch((e) => {
           console.log(e, 'line76');
-          dispatch(userLogin(''));
           setSessToken('');
+          dispatch(userLogin(''));
         });
     }
   }, []);
 
   const checkTrack = () => {
-    // toast({ title: 'Finding current track...', status: 'loading' });
+    toastIdRef.current = toast({ title: 'Finding current track...', status: 'loading' });
     spotify.getMyCurrentPlayingTrack().then((track) => {
       if (!track) {
-        // toast.closeAll();
+        if (toastIdRef.current) toast.close(toastIdRef.current);
         toast({ title: 'Gaada lagu yang diputar', status: 'warning' });
       } else {
-        // setTimeout(() => {
-        //   toast.closeAll();
-        // }, 800);
+        if (toastIdRef.current) toast.close(toastIdRef.current);
         setCurrent(track);
-        // console.log('Popularity: ', track.item.popularity, 'line 98');
       }
     });
   };
@@ -117,15 +117,26 @@ const Home = () => {
   };
 
   const addToPlaylist = async (plId) => {
-    // toast({ title: 'Adding track to playlist...', status: 'loading' });
+    toastIdRef.current = toast({ title: 'Adding track to playlist...', status: 'loading' });
+    if (!curr) {
+      if (toastIdRef.current) toast.close(toastIdRef.current);
+      checkTrack();
+      return;
+    }
     const isExist = await checkIfExist(plId, curr.item.id);
+    console.log('line 128', isExist);
 
     if (!isExist) {
       spotify.addTracksToPlaylist(plId, [curr.item.uri]).then(() => {
+        if (toastIdRef.current) toast.close(toastIdRef.current);
         toast({ title: 'Success adding track to playlist', status: 'info' });
         getPlaylist(user.id);
       });
-    } else toast({ title: 'Track already in the playlist', status: 'warning' });
+    } else {
+      if (toastIdRef.current) toast.close(toastIdRef.current);
+      toast({ title: 'Track already in the playlist', status: 'error' });
+    }
+    setTrackAvailPl([...trackAvailPl, plId]);
   };
 
   const checkIfExist = async (plId) => {
@@ -141,11 +152,13 @@ const Home = () => {
 
     const tId = curr.item.id;
     let flag = false;
+    console.log(tId, 'line 154');
 
     allTracks.map((item, _) => {
+      console.log(item.track.id, item.track.name, tId, 'line 157');
       if (item.track.id === tId) flag = true;
     });
-
+    console.log('line 158', flag);
     return flag;
   };
 
@@ -211,10 +224,32 @@ const Home = () => {
     } else setSearchRes([]);
   };
 
+  const removeFromPlaylist = (plId) => {
+    if (!curr) {
+      checkTrack();
+      return;
+    }
+
+    spotify
+      .removeTracksFromPlaylist(plId, [curr.item.uri])
+      .then(() => {
+        toast({ title: 'Success hapus lagu dari playlist', status: 'info' });
+        getPlaylist(user.id);
+        const idx = trackAvailPl.indexOf(plId);
+        trackAvailPl.splice(idx, 1);
+
+        setTrackAvailPl(trackAvailPl);
+      })
+      .catch((e) => {
+        console.log('line 233', e);
+      });
+  };
+
   const showSearchRes = (id) => {
     spotify.getTracks([id]).then((res) => {
       setCurrent({ item: res.tracks[0] });
-      // setSearchRes([]);
+      setTrackAvailPl([]);
+      setSearchRes([]);
     });
   };
 
@@ -239,36 +274,36 @@ const Home = () => {
   return (
     <Flex bg={'greenYoung'} justifyContent={'center'} w={'full'}>
       <Flex
-        flexDir={'column'}
-        bgColor={'orange'}
         w={'full'}
-        maxW={'420px'}
-        minH={'100vh'}
         p={'12px'}
         pb={'0px'}
-        alignItems={'center'}
-        pos={'relative'}>
+        maxW={'420px'}
+        minH={'100vh'}
+        pos={'relative'}
+        flexDir={'column'}
+        bgColor={'orange'}
+        alignItems={'center'}>
         <Text
-          pos={'absolute'}
-          color={'white'}
-          left={'20px'}
           p={'4px'}
+          left={'20px'}
           border={'2px'}
-          borderRadius={'8px'}
+          color={'white'}
+          pos={'absolute'}
           bgColor={'orange'}
-          fontWeight={'black'}>
-          v1.1.2
+          fontWeight={'black'}
+          borderRadius={'8px'}>
+          v1.1.4
         </Text>
         {user && (
           <Flex flexDir={'column'} alignItems={'center'}>
             <Button
+              boxShadow={'xl'}
+              bgColor={'yellow'}
+              marginBottom={'12px'}
               border={'1px solid black'}
               onClick={() => {
                 checkTrack(setCurrent);
-              }}
-              marginBottom={'12px'}
-              bgColor={'yellow'}
-              boxShadow={'xl'}>
+              }}>
               Check Current Track
             </Button>
           </Flex>
@@ -278,10 +313,10 @@ const Home = () => {
         {user && (
           <>
             <Input
-              marginBottom={'12px'}
               width={'80%'}
               type={'search'}
               bgColor={'white'}
+              marginBottom={'12px'}
               placeholder={'Cari lagu...'}
               _placeholder={{ fontSize: '14px', color: 'gray500' }}
               onBlur={(e) => searchTrack(e.target.value)}
@@ -294,20 +329,20 @@ const Home = () => {
                 {searchRes.map((res, idx) => {
                   return (
                     <Button
-                      marginBottom={'12px'}
                       w={'full'}
+                      marginBottom={'12px'}
                       key={idx.toString()}
                       onClick={() => showSearchRes(res.value)}>
                       <Flex w={'full'}>
                         <img src={res.img} width={40} height={40} />
                         <Flex
-                          flexDir={'column'}
                           w={'full'}
+                          flexDir={'column'}
+                          paddingTop={'2px'}
+                          paddingBottom={'2px'}
                           bgColor={'greenYoung'}
                           borderTopRightRadius={'8px'}
                           borderBottomRightRadius={'8px'}
-                          paddingTop={'2px'}
-                          paddingBottom={'2px'}
                           justifyContent={'space-between'}>
                           <Text w={'full'} textAlign={'left'} marginLeft={'12px'}>
                             {res.label}
@@ -333,20 +368,20 @@ const Home = () => {
                 List Playlist
               </Text>
               <Input
+                w={'140px'}
                 type={'text'}
-                bgColor={'white'}
                 value={inputPl}
+                bgColor={'white'}
+                fontSize={'14px'}
                 placeholder={'Nama playlist...'}
                 _placeholder={{ color: 'gray500', fontSize: '12px' }}
                 onChange={(e) => setInputPl(e.target.value)}
-                w={'140px'}
-                fontSize={'14px'}
               />
               <Button
-                marginLeft={'4px'}
-                border={'1px solid black'}
-                borderRadius={'8px'}
                 bg={'yellow'}
+                marginLeft={'4px'}
+                borderRadius={'8px'}
+                border={'1px solid black'}
                 onClick={() => newPlaylist()}>
                 +
               </Button>
@@ -356,16 +391,18 @@ const Home = () => {
               plList={userPl}
               setPlModal={setPlModal}
               setIsModal={setIsModal}
+              trackAvailPl={trackAvailPl}
               addToPlaylist={addToPlaylist}
+              removeFromPlaylist={removeFromPlaylist}
             />
           </Box>
         )}
         {isOpen && plModal && (
           <ModalCenter
-            children={<ModalBody />}
             isOpen={isOpen}
-            onClickB1={() => deletePlaylist(plModal.id)}
+            children={<ModalBody />}
             closeModal={() => setIsModal(false)}
+            onClickB1={() => deletePlaylist(plModal.id)}
           />
         )}
         <Text color={'white'}>@thoriqzs</Text>

@@ -1,29 +1,33 @@
 import { Box, Button, Flex, Text } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
+import { useState } from 'react';
 
-const PlaylistView = ({ uId, plList, setPlModal, setIsModal, addToPlaylist }) => {
+const PlaylistView = ({ uId, plList, setPlModal, setIsModal, addToPlaylist, trackAvailPl, removeFromPlaylist }) => {
   const router = useRouter();
 
   const PlaylistCard = ({ item }) => {
+    // const [exist, setExist] = useState();
+    const exist = trackAvailPl.includes(item.id);
+
     return (
       <Flex marginBottom={'8px'} justifyContent={'space-between'} alignItems={'center'}>
         <Flex>
           <Box width={'80px'} height={'80px'} marginRight={'8px'}>
             <Flex
-              cursor={'pointer'}
-              pos={'relative'}
               w={'full'}
               h={'full'}
+              pos={'relative'}
+              cursor={'pointer'}
               onClick={() => router.push({ pathname: '/playlist', query: { userId: uId, plId: item.id } })}>
               <Flex
-                pos={'absolute'}
+                zIndex={10}
                 opacity={0}
-                _hover={{ opacity: 0.85 }}
                 width={'80px'}
                 height={'80px'}
-                zIndex={10}
+                pos={'absolute'}
                 bgColor={'gray700'}
-                alignItems={'center'}>
+                alignItems={'center'}
+                _hover={{ opacity: 0.85 }}>
                 <Text color={'white'} textAlign={'center'} fontWeight={'bold'}>
                   Show Details
                 </Text>
@@ -44,36 +48,39 @@ const PlaylistView = ({ uId, plList, setPlModal, setIsModal, addToPlaylist }) =>
         </Flex>
         <Flex flexDir={'column'} h={'full'}>
           <Button
+            p={'4px'}
+            h={'24px'}
+            w={'60px'}
+            bgColor={'red'}
+            color={'white'}
+            fontSize={'12px'}
+            cursor={'pointer'}
+            borderRadius={'4px'}
+            marginBottom={'4px'}
             justifySelf={'flex-end'}
+            border={'1px solid white'}
             onClick={() => {
               setPlModal(item);
               setIsModal(true);
-            }}
-            cursor={'pointer'}
-            borderRadius={'4px'}
-            border={'1px solid white'}
-            bgColor={'red'}
-            color={'white'}
-            p={'4px'}
-            h={'24px'}
-            fontSize={'12px'}
-            marginBottom={'4px'}>
+            }}>
             <Text>Delete</Text>
           </Button>
           <Button
-            justifySelf={'flex-end'}
-            onClick={() => {
-              addToPlaylist(item.id);
-            }}
-            cursor={'pointer'}
-            borderRadius={'4px'}
-            border={'1px solid white'}
-            bgColor={'greenYoung'}
-            color={'white'}
             p={'4px'}
             h={'24px'}
-            fontSize={'12px'}>
-            <Text>Add</Text>
+            color={exist ? 'red' : 'white'}
+            fontSize={'12px'}
+            cursor={'pointer'}
+            borderRadius={'4px'}
+            bgColor={exist ? 'white' : 'greenYoung'}
+            justifySelf={'flex-end'}
+            border={'1px solid'}
+            borderColor={exist ? 'red' : 'white'}
+            onClick={() => {
+              if (exist) removeFromPlaylist(item.id);
+              else addToPlaylist(item.id);
+            }}>
+            <Text>{exist ? 'Remove' : 'Add'}</Text>
           </Button>
         </Flex>
       </Flex>
@@ -82,24 +89,24 @@ const PlaylistView = ({ uId, plList, setPlModal, setIsModal, addToPlaylist }) =>
 
   return (
     <Box
+      w={'340px'}
+      maxH={'400px'}
+      bgColor={'yellow'}
+      paddingTop={'8px'}
+      overflowY={'scroll'}
+      borderRadius={'6px'}
+      paddingLeft={'10px'}
+      paddingRight={'10px'}
       sx={{
         '&::-webkit-scrollbar': {
-          width: '16px',
-          borderRadius: '8px',
-          backgroundColor: `rgba(0, 0, 0, 0.05)`,
+          width: '12px',
+          borderRadius: '12px',
+          backgroundColor: `rgba(0, 0, 0, 0.25)`,
         },
         '&::-webkit-scrollbar-thumb': {
           backgroundColor: `rgba(0, 0, 0, 0.05)`,
         },
-      }}
-      paddingLeft={'10px'}
-      paddingRight={'10px'}
-      w={'340px'}
-      maxH={'400px'}
-      bgColor={'yellow'}
-      overflowY={'scroll'}
-      paddingTop={'8px'}
-      borderRadius={'8px'}>
+      }}>
       {plList.items.map((pl, idx) => {
         return <PlaylistCard item={pl} key={idx.toString()} />;
       })}
