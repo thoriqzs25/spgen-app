@@ -103,6 +103,7 @@ const Home = () => {
         if (toastIdRef.current) toast.close(toastIdRef.current);
         setCurrent(track);
       }
+      setTrackAvailPl([]);
     });
   };
 
