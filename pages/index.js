@@ -246,7 +246,10 @@ const Home = () => {
   };
 
   const showSearchRes = (id) => {
+    toastIdRef.current = toast({ title: 'Changing selected track', status: 'loading' });
     spotify.getTracks([id]).then((res) => {
+      if (toastIdRef.current) toast.close(toastIdRef.current);
+
       setCurrent({ item: res.tracks[0] });
       setTrackAvailPl([]);
       setSearchRes([]);
@@ -292,7 +295,7 @@ const Home = () => {
           bgColor={'orange'}
           fontWeight={'black'}
           borderRadius={'8px'}>
-          v1.2.2
+          v1.2.3
         </Text>
         {user && (
           <Flex flexDir={'column'} alignItems={'center'}>
