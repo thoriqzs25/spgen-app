@@ -1,28 +1,17 @@
-import {
-  Box,
-  Button,
-  Flex,
-  Input,
-  ModalContent,
-  Text,
-  Modal,
-  ModalOverlay,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  useToast,
-} from '@chakra-ui/react';
+import { Box, Button, Flex, Input, Text, useToast } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useDispatch, useStore } from 'react-redux';
 import SpotifyWebApi from 'spotify-web-api-js';
-import { urlLogin, newLogin } from '../src/redirects';
-import PlaylistView from '../src/component/PlaylistView';
+import PlaylistView from '../src/component/Pages/Home/PlaylistView';
 import { userLogin } from '../src/redux/action';
+import CurrentTrack from '../src/component/Pages/Home/CurrentTrack';
+import Profile from '../src/component/Pages/Home/Profile';
+import ModalCenter from '../src/component/ModalCenter';
+import { checkTrack, deletePlaylist, findToken, getPlaylist, showSearchRes } from '../src/utils/calls';
 
 const Home = () => {
-  const [uToken, setUToken] = useState('');
+  const [sessToken, setSessToken] = useState('');
   const [user, setUser] = useState();
   const [curr, setCurrent] = useState('');
   const [userPl, setUserPl] = useState({
@@ -35,7 +24,7 @@ const Home = () => {
   const [plModal, setPlModal] = useState();
 
   const spotify = new SpotifyWebApi();
-  const router = useRouter();
+
   const dispatch = useDispatch();
 
   const states = useStore().getState();
@@ -46,26 +35,14 @@ const Home = () => {
     isClosable: true,
   });
 
-  const findToken = () => {
-    return window.location.hash
-      .substring(1)
-      .split('&')
-      .reduce((initial, item) => {
-        let parts = item.split('=');
-        initial[parts[0]] = decodeURIComponent(parts[1]);
-
-        return initial;
-      }, {});
-  };
-
   useEffect(() => {
     const spotifyToken = findToken().access_token;
     window.location.hash = '';
 
-    if (spotifyToken || uToken || states.auth.token) {
-      const token = spotifyToken ? spotifyToken : uToken ? uToken : states.auth.token;
+    if (spotifyToken || sessToken || states.auth.token) {
+      const token = spotifyToken ? spotifyToken : sessToken ? sessToken : states.auth.token;
       if (!states.auth.token) dispatch(userLogin(spotifyToken));
-      setUToken(token);
+      setSessToken(token);
 
       spotify.setAccessToken(token);
 
@@ -73,48 +50,19 @@ const Home = () => {
         .getMe()
         .then((user) => {
           setUser(user);
-          getPlaylist(user.id);
+          getPlaylist(user.id, setUserPl);
         })
         .catch((e) => {
           console.log(e, 'line76');
           dispatch(userLogin(''));
-          setUToken('');
+          setSessToken('');
         });
     }
   }, []);
 
-  const checkTrack = () => {
-    toast({ title: 'Finding current track...', status: 'loading' });
-    spotify.getMyCurrentPlayingTrack().then((song) => {
-      if (!song) {
-        toast.closeAll();
-        toast({ title: 'Gaada lagu yang diputar', status: 'warning' });
-      } else {
-        setTimeout(() => {
-          toast.closeAll();
-        }, 800);
-        setCurrent(song);
-        // console.log('Popularity: ', song.item.popularity, 'line 98');
-      }
-    });
-  };
-
-  const getPlaylist = (id) => {
-    spotify.getUserPlaylists(id).then((pl) => {
-      setUserPl(pl);
-    });
-  };
-
-  const deletePlaylist = (id) => {
-    spotify.unfollowPlaylist(id).then(() => {
-      toast({ title: 'Success deleting playlist', status: 'info' });
-      getPlaylist(user.id);
-    });
-  };
-
   const addToPlaylist = async (plId) => {
     if (!curr) {
-      checkTrack();
+      checkTrack(setCurrent);
       return;
     }
     toast({ title: 'Adding track to playlist...', status: 'loading' });
@@ -124,7 +72,7 @@ const Home = () => {
     if (!isExist) {
       spotify.addTracksToPlaylist(plId, [curr.item.uri]).then(() => {
         toast({ title: 'Success adding track to playlist', status: 'info' });
-        getPlaylist(user.id);
+        getPlaylist(user.id, setUserPl);
       });
     } else toast({ title: 'Track already in the playlist', status: 'warning' });
   };
@@ -169,7 +117,7 @@ const Home = () => {
       .createPlaylist(user.id, { name: inputPl })
       .then(() => {
         toast({ title: 'Success creating playlist', status: 'info' });
-        getPlaylist(user.id);
+        getPlaylist(user.id, setUserPl);
       })
       .catch((e) => {
         toast({ title: 'ERROR WHILE CREATING PLAYLIST', status: 'warning' });
@@ -207,50 +155,21 @@ const Home = () => {
     } else setSearchRes([]);
   };
 
-  const showSearchRes = (id) => {
-    spotify.getTracks([id]).then((res) => {
-      setCurrent({ item: res.tracks[0] });
-      setSearchRes([]);
-    });
-  };
-
-  const Profile = () => {
+  const ModalBody = () => {
     return (
-      <Box marginBottom={'12px'}>
-        {user && (
-          <Flex flexDir={'column'} alignItems={'center'}>
-            <Button
-              border={'1px solid black'}
-              onClick={checkTrack}
-              marginBottom={'12px'}
-              bgColor={'yellow'}
-              boxShadow={'xl'}>
-              Check Current Track
-            </Button>
-          </Flex>
-        )}
-        {user ? (
-          <Flex>
-            <Box bgColor={'white'} width={'80px'} height={'80px'} marginRight={'8px'}>
-              <img src={user.images[0].url} style={{ objectFit: 'cover', width: 80, height: 80, borderRadius: 40 }} />
-            </Box>
-            <Box>
-              <Text>{`${user.display_name}, ${user.country}`}</Text>
-              <Text>{user.id}</Text>
-              <Text>{user.email}</Text>
-            </Box>
-            <Button border={'1px solid black'} fontSize={'12px'} p={'8px'} bgColor={'yellow'}>
-              <a href={newLogin}>Switch</a>
-            </Button>
-          </Flex>
-        ) : uToken ? (
-          <Text>Loading...</Text>
-        ) : (
-          <Button border={'1px solid black'} bgColor={'yellow'}>
-            <a href={urlLogin}>Login</a>
-          </Button>
-        )}
-      </Box>
+      <Flex>
+        <Box bgColor={'redYoung'} width={'80px'} height={'80px'} marginRight={'8px'}>
+          {plModal.images.length > 0 ? (
+            <img src={plModal.images[0].url} style={{ objectFit: 'cover', width: 80, height: 80 }} />
+          ) : (
+            <Text>No Pict</Text>
+          )}
+        </Box>
+        <Flex flexDir={'column'} justifyContent={'space-between'}>
+          <Text noOfLines={1}>{plModal.name}</Text>
+          <Text>Total track: {plModal.tracks.total}</Text>
+        </Flex>
+      </Flex>
     );
   };
 
@@ -267,7 +186,7 @@ const Home = () => {
         pos={'relative'}>
         <Text
           pos={'absolute'}
-          color={'redYoung'}
+          color={'white'}
           left={'20px'}
           p={'4px'}
           border={'1px'}
@@ -275,23 +194,22 @@ const Home = () => {
           bgColor={'orange'}>
           v1.1.0
         </Text>
-        <Profile />
-        {curr && (
-          <Flex
-            flexDir={'column'}
-            alignItems={'center'}
-            marginBottom={'12px'}
-            bgColor={'background'}
-            w={'full'}
-            paddingBottom={'8px'}
-            borderRadius={'10'}
-            shadow={'base'}>
-            <Text>
-              {curr.item.name}: {curr.item.popularity}/100
-            </Text>
-            <img src={curr.item.album.images[1].url} width={80} height={80} />
+        {user && (
+          <Flex flexDir={'column'} alignItems={'center'}>
+            <Button
+              border={'1px solid black'}
+              onClick={() => {
+                checkTrack(setCurrent);
+              }}
+              marginBottom={'12px'}
+              bgColor={'yellow'}
+              boxShadow={'xl'}>
+              Check Current Track
+            </Button>
           </Flex>
         )}
+        <Profile user={user} sessToken={sessToken} />
+        {curr && <CurrentTrack track={curr} />}
         {user && (
           <>
             <Input
@@ -312,7 +230,7 @@ const Home = () => {
                       marginBottom={'12px'}
                       w={'full'}
                       key={idx.toString()}
-                      onClick={() => showSearchRes(res.value)}>
+                      onClick={() => showSearchRes(res.value, setCurrent, setSearchRes)}>
                       <Flex w={'full'}>
                         <img src={res.img} width={40} height={40} />
                         <Flex
@@ -364,6 +282,7 @@ const Home = () => {
               </Button>
             </Flex>
             <PlaylistView
+              uId={user.id}
               plList={userPl}
               setPlModal={setPlModal}
               setOpenModal={setOpenModal}
@@ -372,43 +291,12 @@ const Home = () => {
           </Box>
         )}
         {openModal && plModal && (
-          <Modal isOpen={openModal} onClose={() => setOpenModal(false)}>
-            <ModalOverlay />
-            <ModalContent bgColor={'gray300'}>
-              <ModalHeader>Delete Playlist?</ModalHeader>
-              <ModalCloseButton />
-              <ModalBody>
-                <Flex>
-                  <Box bgColor={'redYoung'} width={'80px'} height={'80px'} marginRight={'8px'}>
-                    {plModal.images.length > 0 ? (
-                      <img src={plModal.images[0].url} style={{ objectFit: 'cover', width: 80, height: 80 }} />
-                    ) : (
-                      <Text>No Pict</Text>
-                    )}
-                  </Box>
-                  <Flex flexDir={'column'} justifyContent={'space-between'}>
-                    <Text noOfLines={1}>{plModal.name}</Text>
-                    <Text>Total track: {plModal.tracks.total}</Text>
-                  </Flex>
-                </Flex>
-              </ModalBody>
-
-              <ModalFooter>
-                <Button
-                  bgColor={'red'}
-                  borderColor={'white'}
-                  borderWidth={'2px'}
-                  color={'white'}
-                  mr={3}
-                  onClick={() => {
-                    deletePlaylist(plModal.id);
-                    setOpenModal(false);
-                  }}>
-                  Delete
-                </Button>
-              </ModalFooter>
-            </ModalContent>
-          </Modal>
+          <ModalCenter
+            children={<ModalBody />}
+            isOpen={openModal}
+            onClickB1={() => deletePlaylist(plModal.id, user.id, setUserPl)}
+            closeModal={() => setOpenModal(false)}
+          />
         )}
       </Flex>
     </Flex>

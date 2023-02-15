@@ -1,6 +1,9 @@
 import { Box, Button, Flex, Text } from '@chakra-ui/react';
+import { useRouter } from 'next/router';
 
-const PlaylistView = ({ plList, setPlModal, setOpenModal, addToPlaylist }) => {
+const PlaylistView = ({ uId, plList, setPlModal, setOpenModal, addToPlaylist }) => {
+  const router = useRouter();
+
   const PlaylistCard = ({ item }) => {
     return (
       <Flex marginBottom={'8px'} justifyContent={'space-between'} alignItems={'center'}>
@@ -11,7 +14,7 @@ const PlaylistView = ({ plList, setPlModal, setOpenModal, addToPlaylist }) => {
               pos={'relative'}
               w={'full'}
               h={'full'}
-              onClick={() => router.push({ pathname: '/playlist', query: { userId: user.id, plId: item.id } })}>
+              onClick={() => router.push({ pathname: '/playlist', query: { userId: uId, plId: item.id } })}>
               <Flex
                 pos={'absolute'}
                 opacity={0}
