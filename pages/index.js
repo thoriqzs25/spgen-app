@@ -292,7 +292,7 @@ const Home = () => {
           bgColor={'orange'}
           fontWeight={'black'}
           borderRadius={'8px'}>
-          v1.2.1
+          v1.2.2
         </Text>
         {user && (
           <Flex flexDir={'column'} alignItems={'center'}>
@@ -405,7 +405,20 @@ const Home = () => {
             onClickB1={() => deletePlaylist(plModal.id)}
           />
         )}
-        <Text color={'white'}>@thoriqzs</Text>
+        <Text color={'white'}>ig @thoriqzs</Text>
+        {!user && (
+          <Text
+            p={'8px'}
+            w={'75%'}
+            color={'white'}
+            marginTop={'12px'}
+            fontWeight={'bold'}
+            textAlign={'center'}
+            bgColor={'blue.400'}
+            borderRadius={'12px'}>
+            Please kindly contact me to register your spotify email as a fellow tester to use this app :D
+          </Text>
+        )}
       </Flex>
     </Flex>
   );
