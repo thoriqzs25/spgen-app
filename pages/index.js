@@ -68,65 +68,63 @@ const Home = () => {
 
       spotify.setAccessToken(token);
 
-      spotify.getMe().then((user) => {
-        setUser(user);
-        getPlaylist(user.id);
-      })
-      .catch((e)=>{
-        console.log(e, 'line76')
-        dispatch(userLogin(''))
-        setUToken('')
-      })
+      spotify
+        .getMe()
+        .then((user) => {
+          setUser(user);
+          getPlaylist(user.id);
+        })
+        .catch((e) => {
+          console.log(e, 'line76');
+          dispatch(userLogin(''));
+          setUToken('');
+        });
     }
   }, []);
 
-  useEffect(() => {
-    // console.log(userPl, curr, 'line 79');
-  }, [curr]);
-
   const checkTrack = () => {
-    toast({ title: 'Finding current track...', status: 'loading' });
-    spotify.getMyCurrentPlayingTrack().then((song) => {
-      if (!song) {
-        toast.closeAll();
+    // toast({ title: 'Finding current track...', status: 'loading' });
+    spotify.getMyCurrentPlayingTrack().then((track) => {
+      if (!track) {
+        // toast.closeAll();
         toast({ title: 'Gaada lagu yang diputar', status: 'warning' });
       } else {
-        setTimeout(() => {
-          toast.closeAll();
-        }, 800);
-        setCurrent(song);
-        console.log('Popularity: ', song.item.popularity, 'line 98');
+        // setTimeout(() => {
+        //   toast.closeAll();
+        // }, 800);
+        setCurrent(track);
+        // console.log('Popularity: ', track.item.popularity, 'line 98');
       }
     });
   };
 
-  const getPlaylist = (id) => {
-    spotify.getUserPlaylists(id).then((pl) => {
+  const getPlaylist = (plId) => {
+    spotify.getUserPlaylists(plId).then((pl) => {
       // spotify.getUserPlaylists(id, { limit: 4 }).then((pl) => {
       setUserPl(pl);
     });
   };
 
-  const deletePlaylist = (id) => {
-    spotify.unfollowPlaylist(id).then(() => {
+  const deletePlaylist = (plId) => {
+    spotify.unfollowPlaylist(plId).then(() => {
       toast({ title: 'Success deleting playlist', status: 'info' });
       getPlaylist(user.id);
     });
   };
 
-  const addToPlaylist = async (plId, tUri) => {
-    toast({ title: 'Adding track to playlist...', status: 'loading' });
-    const isExist = await checkIfExist(plId, tUri);
+  const addToPlaylist = async (plId) => {
+    // toast({ title: 'Adding track to playlist...', status: 'loading' });
+    const isExist = await checkIfExist(plId, curr.item.id);
 
     if (!isExist) {
-      spotify.addTracksToPlaylist(plId, tUri).then(() => {
+      spotify.addTracksToPlaylist(plId, [curr.item.uri]).then(() => {
         toast({ title: 'Success adding track to playlist', status: 'info' });
         getPlaylist(user.id);
       });
     } else toast({ title: 'Track already in the playlist', status: 'warning' });
   };
 
-  const checkIfExist = async (plId, tUri) => {
+  const checkIfExist = async (plId) => {
     let tracks = await spotify.getPlaylistTracks(plId).then((tracks) => {
       return tracks;
     });
@@ -137,7 +135,7 @@ const Home = () => {
       tracks = next;
     }
 
-    const tId = tUri[0].split(':')[2];
+    const tId = curr.item.id;
     let flag = false;
 
     allTracks.map((item, _) => {
@@ -176,25 +174,29 @@ const Home = () => {
 
   const searchTrack = (key) => {
     if (key.length > 2) {
-      spotify.searchTracks(key, {limit: 4}).then((res) => {
+      spotify.searchTracks(key, { limit: 4 }).then((res) => {
+        const tracks = res.tracks.items;
         let totalRes = [];
-        res.tracks.items.map((track, _) => {
-          const name = track.name;
-          let artistName = ''
-          track.artists.map((art, idx) => {
-            if (idx === 0) {
-              artistName = `${art.name}`
-            } else {
-              if (idx<=2) {
-                artistName = `${artistName}, ${art.name}`
-              }
-            }
-          })
-          if (track.artists.length>3) {
-            artistName = `${artistName}, +${track.artists.length-3}`
+
+        tracks.map((track, _) => {
+          let arrArtists = track.artists;
+          let artistName = '';
+          let excessCount = '';
+          if (arrArtists.length > 3) {
+            excessCount = `, +${arrArtists.length - 3}`;
           }
 
+          arrArtists = arrArtists.slice(0, 3);
+
+          arrArtists.map((art, idx) => {
+            if (idx === 0) {
+              artistName = `${art.name}`;
+            } else artistName = `${artistName}, ${art.name}`;
+          });
+          artistName = artistName + excessCount;
+
           const artist = artistName;
+          const name = track.name;
           const id = track.id;
           const img = track.album.images.length > 0 ? track.album.images[1].url : '';
           const obj = { value: id, label: name, img: img, artist: artist };
@@ -204,7 +206,6 @@ const Home = () => {
       });
     } else setSearchRes([]);
   };
-
 
   const showSearchRes = (id) => {
     spotify.getTracks([id]).then((res) => {
@@ -389,7 +390,9 @@ const Home = () => {
             paddingBottom={'8px'}
             borderRadius={'10'}
             shadow={'base'}>
-            <Text>{curr.item.name}: {curr.item.popularity}/100</Text>
+            <Text>
+              {curr.item.name}: {curr.item.popularity}/100
+            </Text>
             <img src={curr.item.album.images[1].url} width={80} height={80} />
           </Flex>
         )}
@@ -406,12 +409,7 @@ const Home = () => {
             />
             <Text>limit 4 per search</Text>
             {searchRes.length > 0 && (
-              <Flex
-                flexDir={'column'}
-                maxH={'200px'}
-                bgColor={'gray300'}
-                paddingLeft={'12px'}
-                w={'400px'}>
+              <Flex flexDir={'column'} maxH={'200px'} bgColor={'gray300'} paddingLeft={'12px'} w={'400px'}>
                 {searchRes.map((res, idx) => {
                   return (
                     <Button
@@ -421,12 +419,20 @@ const Home = () => {
                       onClick={() => showSearchRes(res.value)}>
                       <Flex w={'full'}>
                         <img src={res.img} width={40} height={40} />
-                        <Flex flexDir={'column'} w={'full'} bgColor={'greenYoung'} paddingTop={'2px'} paddingBottom={'2px'} justifyContent={'space-between'}>
+                        <Flex
+                          flexDir={'column'}
+                          w={'full'}
+                          bgColor={'greenYoung'}
+                          paddingTop={'2px'}
+                          paddingBottom={'2px'}
+                          justifyContent={'space-between'}>
                           <Text w={'full'} textAlign={'left'} marginLeft={'12px'}>
                             {res.label}
                           </Text>
                           <Flex>
-                            <Text fontSize={'12px'} textAlign={'left'} marginLeft={'12px'}>{res.artist}</Text>
+                            <Text fontSize={'12px'} textAlign={'left'} marginLeft={'12px'}>
+                              {res.artist}
+                            </Text>
                           </Flex>
                         </Flex>
                       </Flex>
