@@ -292,7 +292,7 @@ const Home = () => {
           bgColor={'orange'}
           fontWeight={'black'}
           borderRadius={'8px'}>
-          v1.1.4
+          v1.2.1
         </Text>
         {user && (
           <Flex flexDir={'column'} alignItems={'center'}>
