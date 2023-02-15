@@ -17,7 +17,8 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useDispatch, useStore } from 'react-redux';
 import SpotifyWebApi from 'spotify-web-api-js';
-import { urlLogin, newLogin } from '../src/auth';
+import { urlLogin, newLogin } from '../src/redirects';
+import PlaylistView from '../src/component/PlaylistView';
 import { userLogin } from '../src/redux/action';
 
 const Home = () => {
@@ -68,21 +69,19 @@ const Home = () => {
 
       spotify.setAccessToken(token);
 
-      spotify.getMe().then((user) => {
-        setUser(user);
-        getPlaylist(user.id);
-      })
-      .catch((e)=>{
-        console.log(e, 'line76')
-        dispatch(userLogin(''))
-        setUToken('')
-      })
+      spotify
+        .getMe()
+        .then((user) => {
+          setUser(user);
+          getPlaylist(user.id);
+        })
+        .catch((e) => {
+          console.log(e, 'line76');
+          dispatch(userLogin(''));
+          setUToken('');
+        });
     }
   }, []);
-
-  useEffect(() => {
-    // console.log(userPl, curr, 'line 79');
-  }, [curr]);
 
   const checkTrack = () => {
     toast({ title: 'Finding current track...', status: 'loading' });
@@ -95,14 +94,13 @@ const Home = () => {
           toast.closeAll();
         }, 800);
         setCurrent(song);
-        console.log('Popularity: ', song.item.popularity, 'line 98');
+        // console.log('Popularity: ', song.item.popularity, 'line 98');
       }
     });
   };
 
   const getPlaylist = (id) => {
     spotify.getUserPlaylists(id).then((pl) => {
-      // spotify.getUserPlaylists(id, { limit: 4 }).then((pl) => {
       setUserPl(pl);
     });
   };
@@ -114,19 +112,24 @@ const Home = () => {
     });
   };
 
-  const addToPlaylist = async (plId, tUri) => {
+  const addToPlaylist = async (plId) => {
+    if (!curr) {
+      checkTrack();
+      return;
+    }
     toast({ title: 'Adding track to playlist...', status: 'loading' });
-    const isExist = await checkIfExist(plId, tUri);
+
+    const isExist = await checkIfExist(plId, curr.item.id);
 
     if (!isExist) {
-      spotify.addTracksToPlaylist(plId, tUri).then(() => {
+      spotify.addTracksToPlaylist(plId, [curr.item.uri]).then(() => {
         toast({ title: 'Success adding track to playlist', status: 'info' });
         getPlaylist(user.id);
       });
     } else toast({ title: 'Track already in the playlist', status: 'warning' });
   };
 
-  const checkIfExist = async (plId, tUri) => {
+  const checkIfExist = async (plId, tId) => {
     let tracks = await spotify.getPlaylistTracks(plId).then((tracks) => {
       return tracks;
     });
@@ -137,7 +140,6 @@ const Home = () => {
       tracks = next;
     }
 
-    const tId = tUri[0].split(':')[2];
     let flag = false;
 
     allTracks.map((item, _) => {
@@ -176,22 +178,22 @@ const Home = () => {
 
   const searchTrack = (key) => {
     if (key.length > 2) {
-      spotify.searchTracks(key, {limit: 4}).then((res) => {
+      spotify.searchTracks(key, { limit: 4 }).then((res) => {
         let totalRes = [];
         res.tracks.items.map((track, _) => {
           const name = track.name;
-          let artistName = ''
+          let artistName = '';
           track.artists.map((art, idx) => {
             if (idx === 0) {
-              artistName = `${art.name}`
+              artistName = `${art.name}`;
             } else {
-              if (idx<=2) {
-                artistName = `${artistName}, ${art.name}`
+              if (idx <= 2) {
+                artistName = `${artistName}, ${art.name}`;
               }
             }
-          })
-          if (track.artists.length>3) {
-            artistName = `${artistName}, +${track.artists.length-3}`
+          });
+          if (track.artists.length > 3) {
+            artistName = `${artistName}, +${track.artists.length - 3}`;
           }
 
           const artist = artistName;
@@ -204,7 +206,6 @@ const Home = () => {
       });
     } else setSearchRes([]);
   };
-
 
   const showSearchRes = (id) => {
     spotify.getTracks([id]).then((res) => {
@@ -253,110 +254,6 @@ const Home = () => {
     );
   };
 
-  const Playlist = () => {
-    return (
-      <Box
-        sx={{
-          '&::-webkit-scrollbar': {
-            width: '16px',
-            borderRadius: '8px',
-            backgroundColor: `rgba(0, 0, 0, 0.05)`,
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: `rgba(0, 0, 0, 0.05)`,
-          },
-        }}
-        paddingLeft={'10px'}
-        paddingRight={'10px'}
-        w={'340px'}
-        maxH={'400px'}
-        bgColor={'yellow'}
-        overflowY={'scroll'}
-        paddingTop={'8px'}>
-        {userPl.items.map((pl, idx) => {
-          return <PlaylistCard item={pl} key={idx.toString()} />;
-        })}
-      </Box>
-    );
-  };
-
-  const PlaylistCard = ({ item }) => {
-    return (
-      <Flex marginBottom={'8px'} justifyContent={'space-between'} alignItems={'center'}>
-        <Flex>
-          <Box width={'80px'} height={'80px'} marginRight={'8px'}>
-            <Flex
-              cursor={'pointer'}
-              pos={'relative'}
-              w={'full'}
-              h={'full'}
-              onClick={() => router.push({ pathname: '/playlist', query: { userId: user.id, plId: item.id } })}>
-              <Flex
-                pos={'absolute'}
-                opacity={0}
-                _hover={{ opacity: 0.85 }}
-                width={'80px'}
-                height={'80px'}
-                zIndex={10}
-                bgColor={'gray700'}
-                alignItems={'center'}>
-                <Text color={'white'} textAlign={'center'} fontWeight={'bold'}>
-                  Show Details
-                </Text>
-              </Flex>
-              {item.images.length > 0 ? (
-                <img src={item.images[0].url} style={{ objectFit: 'cover', width: 80, height: 80 }} />
-              ) : (
-                <Text bgColor={'redYoung'} w={'full'} h={'full'} textAlign={'center'}>
-                  No Pict
-                </Text>
-              )}
-            </Flex>
-          </Box>
-          <Flex flexDir={'column'} justifyContent={'space-between'}>
-            <Text noOfLines={1}>{item.name}</Text>
-            <Text>Total track: {item.tracks.total}</Text>
-          </Flex>
-        </Flex>
-        <Flex flexDir={'column'} h={'full'}>
-          <Button
-            justifySelf={'flex-end'}
-            onClick={() => {
-              setPlModal(item);
-              setOpenModal(true);
-            }}
-            cursor={'pointer'}
-            borderRadius={'4px'}
-            border={'1px solid white'}
-            bgColor={'red'}
-            color={'white'}
-            p={'4px'}
-            h={'24px'}
-            fontSize={'12px'}
-            marginBottom={'4px'}>
-            <Text>Delete</Text>
-          </Button>
-          <Button
-            justifySelf={'flex-end'}
-            onClick={() => {
-              if (curr.item?.uri) addToPlaylist(item.id, [curr.item.uri]);
-              else checkTrack();
-            }}
-            cursor={'pointer'}
-            borderRadius={'4px'}
-            border={'1px solid white'}
-            bgColor={'greenYoung'}
-            color={'white'}
-            p={'4px'}
-            h={'24px'}
-            fontSize={'12px'}>
-            <Text>Add</Text>
-          </Button>
-        </Flex>
-      </Flex>
-    );
-  };
-
   return (
     <Flex bg={'greenYoung'} justifyContent={'center'} w={'full'}>
       <Flex
@@ -389,7 +286,9 @@ const Home = () => {
             paddingBottom={'8px'}
             borderRadius={'10'}
             shadow={'base'}>
-            <Text>{curr.item.name}: {curr.item.popularity}/100</Text>
+            <Text>
+              {curr.item.name}: {curr.item.popularity}/100
+            </Text>
             <img src={curr.item.album.images[1].url} width={80} height={80} />
           </Flex>
         )}
@@ -406,12 +305,7 @@ const Home = () => {
             />
             <Text>limit 4 per search</Text>
             {searchRes.length > 0 && (
-              <Flex
-                flexDir={'column'}
-                maxH={'200px'}
-                bgColor={'gray300'}
-                paddingLeft={'12px'}
-                w={'400px'}>
+              <Flex flexDir={'column'} maxH={'200px'} bgColor={'gray300'} paddingLeft={'12px'} w={'400px'}>
                 {searchRes.map((res, idx) => {
                   return (
                     <Button
@@ -421,12 +315,20 @@ const Home = () => {
                       onClick={() => showSearchRes(res.value)}>
                       <Flex w={'full'}>
                         <img src={res.img} width={40} height={40} />
-                        <Flex flexDir={'column'} w={'full'} bgColor={'greenYoung'} paddingTop={'2px'} paddingBottom={'2px'} justifyContent={'space-between'}>
+                        <Flex
+                          flexDir={'column'}
+                          w={'full'}
+                          bgColor={'greenYoung'}
+                          paddingTop={'2px'}
+                          paddingBottom={'2px'}
+                          justifyContent={'space-between'}>
                           <Text w={'full'} textAlign={'left'} marginLeft={'12px'}>
                             {res.label}
                           </Text>
                           <Flex>
-                            <Text fontSize={'12px'} textAlign={'left'} marginLeft={'12px'}>{res.artist}</Text>
+                            <Text fontSize={'12px'} textAlign={'left'} marginLeft={'12px'}>
+                              {res.artist}
+                            </Text>
                           </Flex>
                         </Flex>
                       </Flex>
@@ -461,7 +363,12 @@ const Home = () => {
                 +
               </Button>
             </Flex>
-            <Playlist />
+            <PlaylistView
+              plList={userPl}
+              setPlModal={setPlModal}
+              setOpenModal={setOpenModal}
+              addToPlaylist={addToPlaylist}
+            />
           </Box>
         )}
         {openModal && plModal && (
