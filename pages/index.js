@@ -17,7 +17,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useStore } from 'react-redux';
 import SpotifyWebApi from 'spotify-web-api-js';
-import { urlLogin, newLogin } from '../src/utils/redirects';
 import { userLogin } from '../src/redux/action';
 import CurrentTrack from '../src/component/Pages/Home/CurrentTrack';
 import PlaylistView from '../src/component/Pages/Home/PlaylistView';
@@ -38,6 +37,8 @@ const Home = () => {
   const [plModal, setPlModal] = useState();
 
   const [trackAvailPl, setTrackAvailPl] = useState([]);
+
+  const [isDev, setIsDev] = useState(false);
 
   const spotify = new SpotifyWebApi();
   const router = useRouter();
@@ -65,6 +66,9 @@ const Home = () => {
   };
 
   useEffect(() => {
+    // console.log('line 68', window.location.host.split(':')[0].includes('localhost'));
+    if (window.location.host.split(':')[0].includes('localhost')) setIsDev(true);
+
     const spotifyToken = findToken().access_token;
     window.location.hash = '';
 
@@ -124,7 +128,6 @@ const Home = () => {
       return;
     }
     const isExist = await checkIfExist(plId, curr.item.id);
-    console.log('line 128', isExist);
 
     if (!isExist) {
       spotify.addTracksToPlaylist(plId, [curr.item.uri]).then(() => {
@@ -152,13 +155,10 @@ const Home = () => {
 
     const tId = curr.item.id;
     let flag = false;
-    console.log(tId, 'line 154');
 
     allTracks.map((item, _) => {
-      console.log(item.track.id, item.track.name, tId, 'line 157');
       if (item.track.id === tId) flag = true;
     });
-    console.log('line 158', flag);
     return flag;
   };
 
@@ -308,7 +308,7 @@ const Home = () => {
             </Button>
           </Flex>
         )}
-        <Profile user={user} sessToken={sessToken} />
+        <Profile user={user} sessToken={sessToken} isDev={isDev} />
         {curr && <CurrentTrack track={curr} />}
         {user && (
           <>
