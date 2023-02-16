@@ -8,7 +8,7 @@ var querystring = require('querystring');
 // const redirect_uri = 'http://localhost:8888/';
 
 const scope =
-  'user-read-private user-read-email user-read-currently-playing user-read-playback-state playlist-modify-public';
+  'user-read-private user-read-email user-read-currently-playing user-read-playback-state playlist-modify-public playlist-modify-private playlist-read-private';
 
 export const urlLogin =
   'https://accounts.spotify.com/authorize?' +

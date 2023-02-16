@@ -296,7 +296,7 @@ const Home = () => {
           bgColor={'orange'}
           fontWeight={'black'}
           borderRadius={'8px'}>
-          v1.2.3
+          v1.2.4
         </Text>
         {user && (
           <Flex flexDir={'column'} alignItems={'center'}>
@@ -369,7 +369,7 @@ const Home = () => {
           <Box>
             <Flex marginBottom={'8px'} marginTop={'8px'} alignItems={'center'}>
               <Text fontSize={'20px'} fontWeight={'bold'} marginRight={'20px'}>
-                List Playlist
+                List Playlist: {userPl.total}
               </Text>
               <Input
                 w={'140px'}
