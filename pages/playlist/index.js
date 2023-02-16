@@ -14,6 +14,7 @@ const PlaylistPage = () => {
     spotify
       .getPlaylist(plId)
       .then((res) => {
+        console.log(res.public, 'line 17');
         setItem(res);
       })
       .catch(() => {
@@ -50,6 +51,7 @@ const PlaylistPage = () => {
             <Box>
               <Text>{item.name}</Text>
               <Text>{item.tracks.total}</Text>
+              {/* <Text>{item.public ? 'private' : 'public'}</Text> */}
             </Box>
           </Flex>
         ) : (
