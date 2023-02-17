@@ -43,7 +43,7 @@ const PlaylistView = ({ uId, plList, setPlModal, setIsModal, addToPlaylist, trac
           </Box>
           <Flex flexDir={'column'} justifyContent={'space-between'}>
             <Text noOfLines={1}>{item.name}</Text>
-            <Text noOfLines={1}>{!item.public ? 'public' : 'private'}</Text>
+            {/* <Text noOfLines={1}>{!item.public ? 'public' : 'private'}</Text> */}
             <Text>Total track: {item.tracks.total}</Text>
           </Flex>
         </Flex>
@@ -108,7 +108,7 @@ const PlaylistView = ({ uId, plList, setPlModal, setIsModal, addToPlaylist, trac
           backgroundColor: `rgba(0, 0, 0, 0.05)`,
         },
       }}>
-      {plList.items.map((pl, idx) => {
+      {plList.map((pl, idx) => {
         return <PlaylistCard item={pl} key={idx.toString()} />;
       })}
     </Box>

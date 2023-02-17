@@ -86,7 +86,7 @@ const Home = () => {
           getPlaylist(user.id);
         })
         .catch((e) => {
-          console.log(e, 'line76');
+          console.log(e, 'line 76');
           setSessToken('');
           dispatch(userLogin(''));
         });
@@ -107,11 +107,26 @@ const Home = () => {
     });
   };
 
-  const getPlaylist = (plId) => {
-    spotify.getUserPlaylists(plId).then((pl) => {
-      // spotify.getUserPlaylists(id, { limit: 4 }).then((pl) => {
-      setUserPl(pl);
+  const getPlaylist = async (uId) => {
+    let pl = await spotify.getUserPlaylists(uId).then((res) => {
+      return res;
     });
+
+    let allPl = [...pl.items];
+    while (pl.next !== null) {
+      const next = await spotify.getUserPlaylists(uId, { offset: allPl.length }).then((res) => {
+        return res;
+      });
+      allPl = [...allPl, ...next.items];
+      pl = next;
+    }
+
+    let allNonColaborativePl = [];
+    allPl.map((item, _) => {
+      if (item.owner.id === uId) allNonColaborativePl = [...allNonColaborativePl, item];
+    });
+
+    setUserPl(allNonColaborativePl);
   };
 
   const deletePlaylist = (plId) => {
@@ -166,7 +181,7 @@ const Home = () => {
   const checkIfPlExist = (plName) => {
     let flag = false;
 
-    userPl.items.map((pl, _) => {
+    userPl.map((pl, _) => {
       if (pl.name === plName) flag = true;
     });
 
@@ -296,7 +311,7 @@ const Home = () => {
           bgColor={'orange'}
           fontWeight={'black'}
           borderRadius={'8px'}>
-          v1.2.4
+          v1.2.6
         </Text>
         {user && (
           <Flex flexDir={'column'} alignItems={'center'}>
@@ -365,11 +380,11 @@ const Home = () => {
             )}
           </>
         )}
-        {userPl.total > 0 && (
+        {userPl.length > 0 && (
           <Box>
             <Flex marginBottom={'8px'} marginTop={'8px'} alignItems={'center'}>
               <Text fontSize={'20px'} fontWeight={'bold'} marginRight={'20px'}>
-                List Playlist: {userPl.total}
+                List Playlist: {userPl.length}
               </Text>
               <Input
                 w={'140px'}
